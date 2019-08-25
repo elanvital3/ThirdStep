@@ -1,0 +1,125 @@
+---
+title: "Chapter1. Quantmod"
+author: "Quant Monkey"
+date: "`r format(Sys.Date())`" 
+output:
+  html_document:
+    fig_height: 6
+    fig_width: 10
+    highlight: textmate
+    theme: cerulean
+    toc: no
+    toc_depth: 3
+    toc_float: no
+  # pdf_document:
+  #   fig_height: 6
+  #   fig_width: 10
+  #   toc: no
+  # word_document:
+  #   fig_height: 6
+  #   fig_width: 9
+  #   toc: no
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message=F, warning=F)
+# knitr::opts_chunk$set(echo=T, fig.align = "center", fig.height = 8, cache=T, dpi = 300, dev = "jpg")
+```
+
+
+### `Quantmod` package
+```{r quantmod}
+library(quantmod)
+```
+`quantmod` package 를 설치하고 주가를 불러오는 함수
+`getSymbols()` 를 사용해보자. 주식코드번호에 코스피면 `.KS`,코스닥이면 `.KQ` 을 붙이면 된다. 최애주인 SK이노베이션으로 해보자.
+
+```{r getsymbols}
+stock<-getSymbols(Symbols = "096770.KS",
+                  from= "2017-04-03",
+                  to = "2017-04-07",
+                  auto.assign = FALSE)
+stock
+```
+시가(open),고가(high),저가(low),종가(close),거래량(volume),수정주가(adjusted) 데이터를 불러왔다.
+
+수정주가는 종가 기준이며, 모든 가격을 수정가격으로 하고 싶을때는 `adjustOHLC` 함수를 사용하면 된다.
+
+```{r adjustOHLC}
+stock<-adjustOHLC(stock,use.Adjusted = T)
+stock
+
+colnames(stock)<-c('open','high','low','close','volume','adjusted') #컬럼명 변경
+```
+
+간단히 그래프를 그려보기 앞서,
+`getSymbols` 불러온 데이터의 class 는 데이터 프레임이 아닌 `xts` 이다.
+일반적인 `plot()` 그래프를 그릴수 있지만,
+```{r}
+class(stock)
+plot(stock$close) 
+```
+
+
+`chartSeries()` 함수로 눈에 익숙한 주식차트를 그릴수 있다. 
+(데이터 형태가 `xts` 만 사용가능)
+```{r chartseries}
+chartSeries(stock) 
+```
+
+색이 익숙하지 않다.
+```{r chartseries option}
+chartSeries(stock,
+            up.col='red',
+            dn.col='blue',
+            theme = 'white',
+            name='SK이노베이션') 
+
+```
+
+어설프지만, 어느정도 익숙한 차트가 그려졌다.
+마지막으로 좀더 긴 기간의 데이터에 보조지표를 그려보자.
+
+```{r 보조지표}
+
+stock2 <- getSymbols(Symbols = "096770.KS",
+                  from= "2016-01-01",
+                  to = "2016-12-31",
+                  auto.assign = FALSE) #주가 데이터 불러오기
+stock2<-adjustOHLC(stock2,use.Adjusted = T) #수정주가로 변환 
+colnames(stock2)<-c('open','high','low','close','volume','adjusted') # 컬럼명 변경
+```
+
+```{r include=F}
+chartSeries(stock2,
+            up.col='red',
+            dn.col='blue',
+            theme = 'white',
+            name='SK이노베이션') 
+```
+
+```{r}
+addMACD() #MACD 추가
+addBBands() #볼린져밴드 추가
+addSMA(10,col='red') #이동평균선 추가
+```
+
+### Summary
+1. R package `quantmod` 
+2. `getSymbols()` 함수로 주가정보를 가져오고, 전처리를 할 수 있다.
+3. `chartSeries()` 함수로 주가차트를 그리고, 보조지표를 추가 할 수 있다.
+
+### 계획
+1. ~~기업주가 가져오기 : `quantmod`~~
+2. 기업코드 가져오기
+3. 모든 기업의 주가가져오기
+4. 주가를 이용한 모멘텀 지표만들기
+5. 모멘텀 지표로 기업선정하기
+6. 재무제표 정보가져오기
+7. 재무제표로 우량주 지표를 만들고 기업선정하기
+8. 모멘텀지표 + 우량주지표로 기업 선정하기
+
+@ 환율, 경제지표 참조하기
+
+
